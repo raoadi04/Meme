@@ -410,6 +410,7 @@ def validate_config(config_data):
                     "vllm",
                     "groq",
                     "nvidia",
+                    "zhipuai",
                 ),
                 Optional("config"): {
                     Optional("model"): str,
@@ -452,6 +453,7 @@ def validate_config(config_data):
                     "nvidia",
                     "ollama",
                     "cohere",
+                    "zhipuai",
                 ),
                 Optional("config"): {
                     Optional("model"): Optional(str),

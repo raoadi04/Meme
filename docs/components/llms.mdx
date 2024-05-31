@@ -24,6 +24,7 @@ Embedchain comes with built-in support for various popular large language models
   <Card title="AWS Bedrock" href="#aws-bedrock"></Card>
   <Card title="Groq" href="#groq"></Card>
   <Card title="NVIDIA AI" href="#nvidia-ai"></Card>
+  <Card title="Zhipu AI" href="#zhipu-ai"></Card>
 </CardGroup>
 
 ## OpenAI
@@ -784,6 +785,54 @@ answer = app.query("What is the net worth of Elon Musk today?")
 ```
 </CodeGroup>
 
+## Zhipu AI
+
+
+### Usage
+
+In order to use LLMs from Zhipu AI, create an account on [Zhipu AI open platform](https://open.bigmodel.cn/).
+
+Generate an API key from their dashboard. Set the API key as `ZHIPU_API_KEY` environment variable.
+
+Below is an example of how to use LLM model and embedding model from Zhipu AI:
+
+<CodeGroup>
+
+```python main.py
+from embedchain import App
+import os
+os.environ["ZHIPU_API_KEY"]="your-zhipu-api-key"
+config = {
+  'llm': {
+    'provider': 'zhipuai',
+    'config': {
+      'model': 'glm-4',
+      'temperature':0.1,
+      'top_p':0.1,
+      "stream":False,
+    }
+  },
+  'embedder': {
+     'provider': 'zhipuai',
+  }
+}
+app = App.from_config(config=config)
+app.add("https://baike.baidu.com/item/%E5%9F%83%E9%9A%86%C2%B7%E9%A9%AC%E6%96%AF%E5%85%8B/3776526?fr=ge_ala")
+app.query("马斯克在2001年初做了什么")
+# Answer: 在2001年初，马斯克还在贝宝期间，策划了一个名为“火星绿洲”的项目，计划将一个小型实验温室降落在火星上，以尝试让地球的农作物在火星土壤中生长。然而，当他发现购买俄罗斯宇航公司运载火箭的成本远高于自行研发火箭的成本，且发射成本比项目的研发和工程成本还要高时，他决定暂缓这个项目，并成立SpaceX公司，以研究如何降低发射成本。
+
+app.query("SpaceX研制龙飞船2号的时间是什么时候")
+# Answer: SpaceX从2014年开始研制飞船2号。
+
+# stream function demo
+config["llm"]["config"]["stream"]=True
+app = App.from_config(config=config)
+app.add("https://baike.baidu.com/item/%E5%9F%83%E9%9A%86%C2%B7%E9%A9%AC%E6%96%AF%E5%85%8B/3776526?fr=ge_ala")
+result = app.query("What did Musk do in early 2001")
+for item in result:
+    print(item)
+```
+</CodeGroup>
 <br/ >
 
 <Snippet file="missing-llm-tip.mdx" />
