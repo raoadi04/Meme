@@ -132,7 +132,7 @@ class OpenAIAssistant:
     @staticmethod
     def _format_message(thread_message):
         thread_message = cast(Message, thread_message)
-        content = [c.text.value for c in thread_message.content if isinstance(c, TextContentBlock)]
+        content = [c.text.value for c in thread_message.content if c.__class__ is TextContentBlock]
         return " ".join(content)
 
     @staticmethod
