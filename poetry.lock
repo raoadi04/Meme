@@ -7893,7 +7893,7 @@ test = ["big-O", "importlib-resources", "jaraco.functools", "jaraco.itertools", 
 [extras]
 aws-bedrock = ["boto3"]
 cohere = ["cohere"]
-dataloaders = ["docx2txt", "duckduckgo-search", "pytube", "sentence-transformers", "youtube-transcript-api"]
+dataloaders = ["docx2txt", "duckduckgo-search", "sentence-transformers", "youtube-transcript-api"]
 discord = ["discord"]
 dropbox = ["dropbox"]
 elasticsearch = ["elasticsearch"]

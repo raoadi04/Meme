@@ -7,51 +7,60 @@ try:
 except ImportError:
     raise ImportError('YouTube video requires extra dependencies. Install with `pip install youtube-transcript-api "`')
 try:
-    from langchain_community.document_loaders import YoutubeLoader
-    from langchain_community.document_loaders.youtube import _parse_video_id
+    import yt_dlp
 except ImportError:
     raise ImportError(
-        'YouTube video requires extra dependencies. Install with `pip install --upgrade "embedchain[dataloaders]"`'
+        'YouTube video requires extra dependencies. Install with `pip install yt-dlp`'
     ) from None
 from embedchain.helpers.json_serializable import register_deserializable
 from embedchain.loaders.base_loader import BaseLoader
-from embedchain.utils.misc import clean_string
-
 
 @register_deserializable
 class YoutubeVideoLoader(BaseLoader):
     def load_data(self, url):
-        """Load data from a Youtube video."""
-        video_id = _parse_video_id(url)
+        """Load data from a Youtube video using yt-dlp."""
+        ydl_opts = {
+            'quiet': True,
+            'skip_download': True,
+            'writesubtitles': True,
+            'writeautomaticsub': True,
+            'subtitleslangs': ['en'],
+            'subtitlesformat': 'json'
+        }
+        
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            result = ydl.extract_info(url, download=False)
+            if not result or 'entries' in result and not result['entries']:
+                raise ValueError(f"No data found for url: {url}")
 
-        languages = ["en"]
+        metadata = {
+            'title': result.get('title'),
+            'uploader': result.get('uploader'),
+            'upload_date': result.get('upload_date'),
+            'duration': result.get('duration'),
+            'view_count': result.get('view_count'),
+            'like_count': result.get('like_count'),
+            'dislike_count': result.get('dislike_count'),
+            'average_rating': result.get('average_rating'),
+            'categories': result.get('categories'),
+            'tags': result.get('tags'),
+            'url': url
+        }
+        content = ''
+        video_id = url.split("v=")[1].split("&")[0]
         try:
-            # Fetching transcript data
-            languages = [transcript.language_code for transcript in YouTubeTranscriptApi.list_transcripts(video_id)]
-            transcript = YouTubeTranscriptApi.get_transcript(video_id, languages=languages)
-            # convert transcript to json to avoid unicode symboles
-            transcript = json.dumps(transcript, ensure_ascii=True)
+            transcript = YouTubeTranscriptApi.get_transcript(video_id, languages=["en"])
+            content = ' '.join([item['text'] for item in transcript])
+            metadata["transcript"] = json.dumps(transcript, ensure_ascii=False)
         except Exception:
             logging.exception(f"Failed to fetch transcript for video {url}")
-            transcript = "Unavailable"
-
-        loader = YoutubeLoader.from_youtube_url(url, add_video_info=True, language=languages)
-        doc = loader.load()
-        output = []
-        if not len(doc):
-            raise ValueError(f"No data found for url: {url}")
-        content = doc[0].page_content
-        content = clean_string(content)
-        metadata = doc[0].metadata
-        metadata["url"] = url
-        metadata["transcript"] = transcript
-
-        output.append(
-            {
-                "content": content,
-                "meta_data": metadata,
-            }
-        )
+            metadata["transcript"] = "Unavailable"
+        
+        output = [{
+            "content": content,
+            "meta_data": metadata,
+        }]
+        
         doc_id = hashlib.sha256((content + url).encode()).hexdigest()
         return {
             "doc_id": doc_id,
