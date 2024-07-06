@@ -9,7 +9,6 @@ import httpx
 from embedchain.config.base_config import BaseConfig
 from embedchain.helpers.json_serializable import register_deserializable
 
-
 logger = logging.getLogger(__name__)
 
 DEFAULT_PROMPT = """
